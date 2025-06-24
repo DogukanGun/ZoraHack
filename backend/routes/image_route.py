@@ -5,11 +5,21 @@ from io import BytesIO
 from image.filter.filter_cartoon_a import apply_filter_cartoon_a
 from image.filter.filter_cartoon_b import apply_filter_cartoon_b
 from image.generation.generate_image import generate_image
+from image.generation.generate_image_by_text import generate_image_by_text
 
 router = APIRouter(prefix="/image")
 
+@router.post("/generate/text")
+async def generate_image_by_text_endpoint(
+        text: str
+):
+    try:
+        return StreamingResponse(BytesIO(generate_image_by_text(text)), media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @router.post("/generate")
-async def generate_image_route(
+async def generate_image_by_text_and_file_endpoint(
     file: UploadFile = File(...),
     prompt: str = Form(..., description="Text prompt for image generation")
 ):
@@ -28,7 +38,7 @@ async def generate_image_route(
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @router.post("/{filter_name}")
-async def apply_filter(
+async def apply_filter_endpoint(
         filter_name: str,
         file: UploadFile = File(...),
         debug_stage: str = Query(None, description="Debug stage: original, grayscale, edges, color_reduced, blurred")

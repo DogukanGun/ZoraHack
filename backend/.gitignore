@@ -1,1 +1,3 @@
 instruct-pix2pix-local/
+__pycache__/
+.idea/
