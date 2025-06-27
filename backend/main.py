@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from routes import image_route
+from routes import image_route, video_router
 from dotenv import load_dotenv
 app = FastAPI()
 load_dotenv()
@@ -14,7 +14,7 @@ async def root():
 async def say_hello(name: str):
     return {"message": f"Hello {name}"}
 
-routes = [image_route.router]
+routes = [image_route.router, video_router.router]
 
 for route in routes:
     app.include_router(route)
