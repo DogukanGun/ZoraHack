@@ -17,31 +17,7 @@ const reset = '\x1b[0m';
 dotenv.config({ path: '.env' });
 
 async function lookupFidByCustodyAddress(custodyAddress, apiKey) {
-  if (!apiKey) {
-    throw new Error('Neynar API key is required');
-  }
-  const lowerCasedCustodyAddress = custodyAddress.toLowerCase();
-
-  const response = await fetch(
-    `https://api.neynar.com/v2/farcaster/user/bulk-by-address?addresses=${lowerCasedCustodyAddress}&address_types=custody_address`,
-    {
-      headers: {
-        'accept': 'application/json',
-        'x-api-key': 'FARCASTER_V2_FRAMES_DEMO'
-      }
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Failed to lookup FID: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  if (!data[lowerCasedCustodyAddress]?.length || !data[lowerCasedCustodyAddress][0].custody_address) {
-    throw new Error('No FID found for this custody address');
-  }
-
-  return data[lowerCasedCustodyAddress][0].fid;
+  return process.env.FID;
 }
 
 async function loadEnvLocal() {

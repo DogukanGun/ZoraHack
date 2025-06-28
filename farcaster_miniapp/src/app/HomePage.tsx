@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '~/components/ui/Button'
 import { Card, CardContent } from '~/components/ui/card'
 import { ImageIcon, VideoIcon, Sparkles, Wand2 } from 'lucide-react'
@@ -8,10 +7,8 @@ import { useMiniApp } from '@neynar/react'
 
 export default function HomePage() {
   const { isSDKLoaded } = useMiniApp()
-  const [selectedOption, setSelectedOption] = useState<'image' | 'video' | null>(null)
 
   const handleOptionSelect = (option: 'image' | 'video') => {
-    setSelectedOption(option)
     if (option === 'image') {
       window.location.href = '/image'
     } else {
