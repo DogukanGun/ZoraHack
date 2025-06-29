@@ -12,6 +12,9 @@ export default function VideoPage() {
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
+  const [numFrames, setNumFrames] = useState(25)
+  const [numInferenceSteps, setNumInferenceSteps] = useState(7)
+  const [seed, setSeed] = useState<number | null>(null)
   const router = useRouter()
 
   const handleGenerateVideo = async () => {
@@ -19,18 +22,27 @@ export default function VideoPage() {
     
     setIsGenerating(true)
     try {
+      const formData = new FormData()
+      formData.append('prompt', prompt)
+      formData.append('num_frames', numFrames.toString())  //@TODO: if frames is more than 32, charge extra cost
+      formData.append('num_inference_steps', numInferenceSteps.toString()) //@TODO: if inference steps is more than 25, charge extra cost
+      
+      if (seed && seed > 0) {
+        formData.append('seed', seed.toString())
+      }
+      
       const response = await fetch('http://localhost:8000/video/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
+        body: formData,
       })
       
       if (response.ok) {
         const blob = await response.blob()
         const videoUrl = URL.createObjectURL(blob)
         setGeneratedVideo(videoUrl)
+      } else {
+        const errorText = await response.text()
+        console.error('Video generation failed:', errorText)
       }
     } catch (error) {
       console.error('Video generation failed:', error)
@@ -88,6 +100,44 @@ export default function VideoPage() {
                   onChange={(e) => setPrompt(e.target.value)}
                   className="w-full h-32 p-4 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+
+                {/* Advanced Options */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Number of Frames
+                    </label>
+                    <select
+                      value={numFrames}
+                      onChange={(e) => setNumFrames(parseInt(e.target.value))}
+                      className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={17}>17 frames</option>
+                      <option value={25}>25 frames</option>
+                      <option value={33}>33 frames</option>
+                      <option value={41}>41 frames</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Inference Steps
+                    </label>
+                    <select
+                      value={numInferenceSteps}
+                      onChange={(e) => setNumInferenceSteps(parseInt(e.target.value))}
+                      className="w-full p-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={4}>4 steps</option>
+                      <option value={5}>5 steps</option>
+                      <option value={6}>6 steps</option>
+                      <option value={7}>7 steps (default)</option>
+                      <option value={8}>8 steps</option>
+                      <option value={9}>9 steps</option>
+                      <option value={10}>10 steps</option>
+                    </select>
+                  </div>
+                </div>
+
                 <Button 
                   onClick={handleGenerateVideo}
                   disabled={isGenerating || !prompt}
