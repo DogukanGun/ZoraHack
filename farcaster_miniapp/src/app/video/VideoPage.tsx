@@ -3,15 +3,18 @@
 import { useState } from 'react'
 import { Button } from '~/components/ui/Button'
 import { Card, CardContent } from '~/components/ui/card'
-import { ArrowLeft, Video, Wand2, Share } from 'lucide-react'
+import { ArrowLeft, Video, Wand2, Share, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useMiniApp } from '@neynar/react'
 
 export default function VideoPage() {
   const { isSDKLoaded } = useMiniApp()
+  const miniApp = useMiniApp()
   const [prompt, setPrompt] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSharing, setIsSharing] = useState(false)
   const [generatedVideo, setGeneratedVideo] = useState<string | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [numFrames, setNumFrames] = useState(25)
   const [numInferenceSteps, setNumInferenceSteps] = useState(7)
   const [seed, setSeed] = useState<number | null>(null)
@@ -21,6 +24,7 @@ export default function VideoPage() {
     if (!prompt) return
     
     setIsGenerating(true)
+    setErrorMessage(null)
     try {
       const formData = new FormData()
       formData.append('prompt', prompt)
@@ -42,17 +46,40 @@ export default function VideoPage() {
         setGeneratedVideo(videoUrl)
       } else {
         const errorText = await response.text()
+        setErrorMessage(`Video generation failed: ${errorText}`)
         console.error('Video generation failed:', errorText)
       }
     } catch (error) {
+      setErrorMessage(`Network error: ${error instanceof Error ? error.message : String(error)}`)
       console.error('Video generation failed:', error)
     } finally {
       setIsGenerating(false)
     }
   }
 
-  const handleShare = () => {
-    console.log('Share on Farcaster')
+  const handleShare = async () => {
+    if (!generatedVideo) return
+    
+    setIsSharing(true)
+    setErrorMessage(null)
+    
+    try {
+      console.log('Attempting to share video:', generatedVideo)
+      
+      await miniApp.actions.composeCast({
+        text: `Check out this AI-generated video! ${prompt ? `Prompt: "${prompt}"` : ''}`,
+        embeds: [generatedVideo]
+      })
+      
+      console.log('Video shared successfully!')
+      setErrorMessage('Video shared successfully on Farcaster!')
+      
+    } catch (error) {
+      console.error("Error sharing on Farcaster:", error)
+      setErrorMessage(`Error sharing on Farcaster: ${error instanceof Error ? error.message : String(error)}`)
+    } finally {
+      setIsSharing(false)
+    }
   }
 
   if (!isSDKLoaded) {
@@ -78,6 +105,15 @@ export default function VideoPage() {
           </Button>
           <h1 className="text-3xl font-bold text-white">Create Videos</h1>
         </div>
+
+        {/* Display error/success message */}
+        {errorMessage && (
+          <Card className={`${errorMessage.includes('Error') ? 'bg-red-500/20 border-red-500/30' : 'bg-green-500/20 border-green-500/30'} mb-4 max-w-2xl mx-auto`}>
+            <CardContent className="p-4">
+              <p className="text-white text-sm">{errorMessage}</p>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="space-y-8">
           <Card className="max-w-2xl mx-auto">
@@ -179,10 +215,20 @@ export default function VideoPage() {
               <div className="flex justify-center">
                 <Button 
                   onClick={handleShare}
+                  disabled={isSharing}
                   className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
                 >
-                  <Share className="h-4 w-4 mr-2" />
-                  Share on Farcaster
+                  {isSharing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Sharing...
+                    </>
+                  ) : (
+                    <>
+                      <Share className="h-4 w-4 mr-2" />
+                      Share on Farcaster
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
