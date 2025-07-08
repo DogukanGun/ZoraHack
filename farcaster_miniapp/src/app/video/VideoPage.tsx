@@ -6,6 +6,7 @@ import { Card, CardContent } from '~/components/ui/card'
 import { ArrowLeft, Video, Wand2, Share, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useMiniApp } from '@neynar/react'
+import { ZoraVideoToken } from '~/components/ui/ZoraVideoToken'
 
 export default function VideoPage() {
   const { isSDKLoaded } = useMiniApp()
@@ -204,33 +205,32 @@ export default function VideoPage() {
                   <video 
                     src={generatedVideo} 
                     controls 
-                    className="w-full rounded-lg"
-                    style={{ maxHeight: '400px' }}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+                    className="w-full rounded-lg border border-white/20"
+                  />
+                  <div className="mt-4 flex gap-4">
+                    <Button
+                      onClick={handleShare}
+                      disabled={isSharing}
+                      className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                    >
+                      {isSharing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Sharing...
+                        </>
+                      ) : (
+                        <>
+                          <Share className="h-4 w-4 mr-2" />
+                          Share on Farcaster
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
-              <div className="flex justify-center">
-                <Button 
-                  onClick={handleShare}
-                  disabled={isSharing}
-                  className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
-                >
-                  {isSharing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Sharing...
-                    </>
-                  ) : (
-                    <>
-                      <Share className="h-4 w-4 mr-2" />
-                      Share on Farcaster
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* Add Zora Video Token Component */}
+              <ZoraVideoToken prompt={prompt} videoUrl={generatedVideo} />
             </div>
           )}
 
